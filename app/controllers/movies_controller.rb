@@ -1,7 +1,8 @@
 # This file is app/controllers/movies_controller.rb
 class MoviesController < ApplicationController
   def index
-    @movies = Movie.order(*params[:order])
+    @movies = Movie.where('rating in (?)', selected_ratings).order(*params[:order])
+    @all_ratings = all_ratings
   end
 
   def show
@@ -36,5 +37,19 @@ class MoviesController < ApplicationController
     @movie.destroy
     flash[:notice] = "Movie '#{@movie.title}' deleted."
     redirect_to movies_path
+  end
+
+  private
+
+  def selected_ratings
+    if params.has_key?(:ratings)
+      params[:ratings].keys
+    else
+      all_ratings
+    end
+  end
+
+  def all_ratings
+    ['G','PG','PG-13','R','NC-17']
   end
 end

@@ -18,3 +18,8 @@ end
 def release_date_selected_class
 	params[:order] == 'release_date' ? 'hilite' : ''
 end
+
+def filtered_option_checked?(rating)
+	return true unless params.has_key?(:ratings)
+	params[:ratings].has_key?(rating)
+end
