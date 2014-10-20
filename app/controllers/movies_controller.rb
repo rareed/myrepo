@@ -1,7 +1,10 @@
 # This file is app/controllers/movies_controller.rb
 class MoviesController < ApplicationController
+before_filter :match_filter_uri, only: :index
+after_filter :save_filtering_settings, only: :index
+
   def index
-    @movies = Movie.where('rating in (?)', selected_ratings).order(*params[:order])
+    @movies = Movie.where('rating in (?)', selected_ratings).order(*column_orderings)
     @all_ratings = all_ratings
   end
 
@@ -41,6 +44,24 @@ class MoviesController < ApplicationController
 
   private
 
+  def save_filtering_settings
+    session[:order] = column_orderings if params.has_key? :order
+    session[:ratings] = params[:ratings] if params.has_key? :ratings
+  end
+
+  def match_filter_uri
+    if (session.has_key?(:order) && params[:order].blank?) ||
+      (session.has_key?(:ratings) && params[:ratings].blank?)
+
+      filters = {
+        order: params[:order].blank? ? session[:order] : column_orderings,
+        ratings: params[:ratings].blank? ? session[:ratings] : params[:ratings]
+      }
+
+      redirect_to movies_path(filters)
+    end
+  end
+
   def selected_ratings
     if params.has_key?(:ratings)
       params[:ratings].keys
@@ -51,5 +72,9 @@ class MoviesController < ApplicationController
 
   def all_ratings
     ['G','PG','PG-13','R','NC-17']
+  end
+
+  def column_orderings
+    params[:order]
   end
 end
